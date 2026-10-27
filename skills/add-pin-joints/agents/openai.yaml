@@ -1,0 +1,4 @@
+interface:
+  display_name: "Add Pin Joints"
+  short_description: "Join split OpenSCAD prints with glued hex pins"
+  default_prompt: "Use $add-pin-joints to split this OpenSCAD part and join the pieces with glued hex pins."

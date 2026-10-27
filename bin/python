@@ -1,0 +1,8 @@
+#!/bin/sh
+# Run Python with the kit's packages (numpy, Pillow). Uses the .venv that
+# bin/setup creates; falls back to the system python3.
+KIT="$(cd "$(dirname "$0")/.." && pwd)"
+if [ -x "$KIT/.venv/bin/python" ]; then
+  exec "$KIT/.venv/bin/python" "$@"
+fi
+exec python3 "$@"

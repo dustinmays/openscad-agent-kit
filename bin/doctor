@@ -1,0 +1,81 @@
+#!/bin/bash
+# Check that the kit's tools work on this Mac. Each line says OK, or FIX with
+# the one thing to do. Exit status 0 means every requirement is OK.
+# Notes marked "note" are optional or reminders and never fail the check.
+KIT="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$KIT" || exit 1
+fails=0
+ok()   { printf 'OK    %s\n' "$1"; }
+fix()  { printf 'FIX   %s\n      -> %s\n' "$1" "$2"; fails=$((fails + 1)); }
+note() { printf 'note  %s\n' "$1"; }
+
+# OpenSCAD
+app=""
+for a in "${OPENSCAD_APP:-}" /Applications/OpenSCAD.app "$HOME/Applications/OpenSCAD.app"; do
+  if [ -n "$a" ] && [ -x "$a/Contents/MacOS/OpenSCAD" ]; then app="$a"; break; fi
+done
+if [ -z "$app" ]; then
+  fix "OpenSCAD is not installed" "run bin/setup, or: brew install --cask openscad@snapshot"
+else
+  version="$(bin/openscad --version 2>&1)"; vstatus=$?
+  version="$(printf '%s\n' "$version" | tail -1)"
+  quarantined=""
+  # Quarantine flag bit 0x40 means the user already allowed the app ("Open Anyway").
+  qflags="$(xattr -p com.apple.quarantine "$app" 2>/dev/null | cut -d';' -f1)"
+  if [ -n "$qflags" ] && [ $(( 0x$qflags & 0x40 )) -eq 0 ]; then quarantined=1; fi
+  tmp="$(mktemp -d)"
+  echo 'cube(10);' > "$tmp/cube.scad"
+  if [ "$vstatus" -eq 0 ] && bin/openscad -o "$tmp/cube.stl" --export-format asciistl "$tmp/cube.scad" >/dev/null 2>&1 \
+     && grep -q facet "$tmp/cube.stl"; then
+    ok "OpenSCAD runs with the Manifold backend ($version, $app)"
+  elif [ "$vstatus" -ne 0 ] || [ -n "$quarantined" ]; then
+    fix "OpenSCAD is installed but macOS blocked it from running (Gatekeeper security check)" \
+        "see SETUP.md step 2: System Settings > Privacy & Security > Open Anyway, then run bin/doctor again"
+  else
+    fix "OpenSCAD ($version) cannot export with --backend=manifold; it is an older release without Manifold" \
+        "install the snapshot: brew install --cask openscad@snapshot (move the old OpenSCAD.app to the Trash first)"
+  fi
+  rm -rf "$tmp"
+fi
+
+# Python
+if [ -x .venv/bin/python ]; then py=.venv/bin/python; else py=python3; fi
+if ! command -v "$py" >/dev/null 2>&1; then
+  fix "Python 3 is not installed" "run bin/setup (it installs Python with Homebrew)"
+elif ! "$py" -c 'import sys; sys.exit(sys.version_info < (3, 9))' 2>/dev/null; then
+  fix "Python is older than 3.9 ($("$py" --version 2>&1))" "run bin/setup"
+else
+  ok "Python $("$py" -c 'import platform; print(platform.python_version())') ($py)"
+  for mod in numpy PIL; do
+    name=$mod; [ "$mod" = PIL ] && name=Pillow
+    if v="$("$py" -c "import $mod; print($mod.__version__)" 2>/dev/null)"; then
+      ok "$name $v"
+    else
+      fix "$name is missing" "run bin/setup (it installs numpy and Pillow into .venv)"
+    fi
+  done
+fi
+
+# Kit layout
+if [ -f .claude/skills/start-a-project/SKILL.md ] && [ -f .agents/skills/start-a-project/SKILL.md ]; then
+  ok "skills are visible to Claude Code (.claude/skills) and Codex (.agents/skills)"
+else
+  fix "the skill links are missing or broken" "from the kit root: ln -sfn ../skills .claude/skills; ln -sfn ../skills .agents/skills"
+fi
+
+# Reminders, never failures
+if grep -qi '^Status: *filled' my-printer.md 2>/dev/null; then
+  ok "my-printer.md is filled in"
+else
+  note "my-printer.md is still the template; the agent will ask about your printer before your first print"
+fi
+command -v git >/dev/null 2>&1 || note "git is not installed (optional; it keeps a history of your designs: xcode-select --install)"
+command -v node >/dev/null 2>&1 || note "Node is not installed (optional; only the Support Fins study tool needs it)"
+
+echo
+if [ "$fails" -eq 0 ]; then
+  echo "All requirements OK."
+else
+  echo "$fails requirement(s) need a fix (see FIX lines above)."
+fi
+exit $(( fails > 0 ))

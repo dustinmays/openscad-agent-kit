@@ -1,0 +1,77 @@
+#!/bin/bash
+# One-time setup for the kit on a Mac. Safe to run again: it skips anything
+# already installed. It installs:
+#   1. Homebrew (only if missing, and only after you say yes)
+#   2. OpenSCAD development snapshot (Homebrew cask openscad@snapshot)
+#   3. A private Python environment in .venv with numpy and Pillow
+# Then it runs bin/doctor.
+set -u
+KIT="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$KIT" || exit 1
+
+say() { printf '\n==> %s\n' "$1"; }
+
+if [ "$(uname -s)" != "Darwin" ]; then
+  echo "This setup script is for macOS. On another system, install OpenSCAD (a 2025 or newer"
+  echo "snapshot with the Manifold backend), Python 3 with numpy and Pillow, then run bin/doctor."
+  exit 1
+fi
+
+# 1. Homebrew
+say "Homebrew"
+for b in /opt/homebrew/bin/brew /usr/local/bin/brew; do
+  [ -x "$b" ] && eval "$("$b" shellenv)"
+done
+if command -v brew >/dev/null 2>&1; then
+  echo "Homebrew is installed."
+else
+  echo "Homebrew (the Mac package manager) is not installed. Setup uses it to install OpenSCAD."
+  printf "Install Homebrew now? It will ask for your Mac password. [y/N] "
+  read -r answer
+  case "$answer" in
+    y|Y|yes|YES)
+      /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" || exit 1
+      for b in /opt/homebrew/bin/brew /usr/local/bin/brew; do
+        [ -x "$b" ] && eval "$("$b" shellenv)"
+      done ;;
+    *)
+      echo "Skipped. Install Homebrew from https://brew.sh, or install OpenSCAD yourself, then run bin/setup again."
+      exit 1 ;;
+  esac
+fi
+
+# 2. OpenSCAD snapshot
+say "OpenSCAD (development snapshot)"
+if brew list --cask openscad@snapshot >/dev/null 2>&1; then
+  echo "openscad@snapshot is installed."
+elif [ -d /Applications/OpenSCAD.app ] || [ -d "$HOME/Applications/OpenSCAD.app" ]; then
+  echo "An OpenSCAD.app is already installed but not from openscad@snapshot."
+  echo "bin/doctor will tell you whether it is new enough (it needs the Manifold backend)."
+else
+  brew install --cask openscad@snapshot || exit 1
+fi
+
+# 3. Python with numpy and Pillow
+say "Python 3 with numpy and Pillow"
+PY=""
+for p in python3 /opt/homebrew/bin/python3 /usr/local/bin/python3 /usr/bin/python3; do
+  if command -v "$p" >/dev/null 2>&1 && "$p" -c 'import sys; sys.exit(sys.version_info < (3, 9))' 2>/dev/null; then
+    PY="$p"; break
+  fi
+done
+if [ -z "$PY" ]; then
+  brew install python || exit 1
+  PY="$(brew --prefix)/bin/python3"
+fi
+if [ ! -x .venv/bin/python ]; then
+  "$PY" -m venv .venv || exit 1
+fi
+if .venv/bin/python -c 'import numpy, PIL' 2>/dev/null; then
+  echo "numpy and Pillow are installed in .venv."
+else
+  .venv/bin/python -m pip install --quiet --upgrade pip
+  .venv/bin/python -m pip install --quiet numpy Pillow || exit 1
+fi
+
+say "Checking everything"
+exec "$KIT/bin/doctor"

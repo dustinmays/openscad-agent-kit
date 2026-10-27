@@ -1,0 +1,4 @@
+interface:
+  display_name: "Project Operating Model"
+  short_description: "Keep project context lightweight and navigable"
+  default_prompt: "Use $project-operating-model to organize or resume this project with clear current state and durable knowledge."

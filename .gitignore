@@ -1,0 +1,41 @@
+# Mac, Python and temporary files
+.DS_Store
+__pycache__/
+*.py[cod]
+.venv/
+*.tmp
+*.log
+
+# Photos and rendered pictures stay on your Mac.
+*.[pP][nN][gG]
+*.[jJ][pP][gG]
+*.[jJ][pP][eE][gG]
+*.[hH][eE][iI][cC]
+*.[hH][eE][iI][fF]
+*.[wW][eE][bB][pP]
+*.[gG][iI][fF]
+*.[tT][iI][fF]
+*.[tT][iI][fF][fF]
+
+# The worked example's reference photos are part of the kit.
+!examples/*/reference/*.jpeg
+
+# Meshes and print files are regenerated from the .scad sources.
+*.[sS][tT][lL]
+*.[oO][fF][fF]
+*.[oO][bB][jJ]
+*.[aA][mM][fF]
+*.[3][mM][fF]
+*.[gG][cC][oO][dD][eE]
+*.[bB][gG][cC][oO][dD][eE]
+
+# Archives and installers
+*.[zZ][iI][pP]
+*.[dD][mM][gG]
+*.[pP][kK][gG]
+
+# The worked example's outputs, including its JSON check reports, are
+# regenerated on demand (see examples/keypad-sculpture/README.md#regenerate).
+# Reports hold timings and mesh counts that change on every run.
+examples/*/exports/
+examples/*/renders/

@@ -1,0 +1,3 @@
+interface:
+  display_name: "Design for Printability"
+  short_description: "Geometry guidance for functional FDM prints"

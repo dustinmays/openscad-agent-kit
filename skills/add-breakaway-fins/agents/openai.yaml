@@ -1,0 +1,4 @@
+interface:
+  display_name: "Add Breakaway Fins"
+  short_description: "Add removable fins for upright OpenSCAD prints"
+  default_prompt: "Use $add-breakaway-fins to add a thin sacrificial print brace to this OpenSCAD model."

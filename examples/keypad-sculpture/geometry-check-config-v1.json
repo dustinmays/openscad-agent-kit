@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "revision": "v1",
+  "source": "examples/keypad-sculpture/keypad-parts.scad",
+  "dependencies": [
+    "examples/keypad-sculpture/parts-blockout.scad",
+    "examples/keypad-sculpture/ribs-blockout.scad",
+    "examples/keypad-sculpture/blockout.scad",
+    "examples/keypad-sculpture/keypad-reference.scad",
+    "lib/pin-joints.scad"
+  ],
+  "output_dir": "examples/keypad-sculpture/exports/parts-v1/checks",
+  "report": "geometry-check-v1.json",
+  "selector": "piece",
+  "exports": [
+    {"name": "yellow", "mode": "yellow", "single_solid": true},
+    {"name": "shell", "mode": "shell", "single_solid": true},
+    {"name": "blue", "mode": "blue", "single_solid": true},
+    {"name": "keypad", "mode": "keypad"},
+    {"name": "keypad_buttons", "mode": "keypad_buttons"},
+    {"name": "keypad_led", "mode": "keypad_led"},
+    {"name": "blockout_drape", "mode": "blockout_drape"}
+  ],
+  "post_check": "examples/keypad-sculpture/check_parts.py",
+  "post_check_report": "examples/keypad-sculpture/exports/parts-v1/checks/parts-geometry-v1.json",
+  "intersections": [
+    {"name": "shell_keypad", "mode": "x_shell_keypad", "expected_collision": false},
+    {"name": "shell_keypad_gap_0.14", "mode": "x_shell_keypad_env", "defines": {"env_grow": 0.14}, "expected_collision": false},
+    {"name": "shell_keypad_gap_0.16_control", "mode": "x_shell_keypad_env", "defines": {"env_grow": 0.16}, "expected_collision": true},
+    {"name": "shell_yellow_without_ridges", "mode": "x_shell_yellow", "expected_collision": false},
+    {"name": "ridge_bite_intended", "mode": "x_ridge_bite", "expected_collision": true},
+    {"name": "keypad_yellow", "mode": "x_keypad_yellow", "expected_collision": false},
+    {"name": "blue_yellow", "mode": "x_blue_yellow", "expected_collision": false},
+    {"name": "blue_keypad", "mode": "x_blue_keypad", "expected_collision": false},
+    {"name": "blue_shell_incl_pins", "mode": "x_blue_shell", "expected_collision": false},
+    {"name": "key_socket_wall_0.8", "mode": "x_key_wall", "expected_collision": false},
+    {"name": "shell_magnet_pocket_wall_0.8", "mode": "x_shell_pocket_wall", "expected_collision": false},
+    {"name": "post_magnet_pocket_wall_0.8", "mode": "x_post_pocket_wall", "expected_collision": false},
+    {"name": "door_pocket_margin_1.0", "mode": "x_pocket_margin", "expected_collision": false},
+    {"name": "pin_socket_wall_0.8", "mode": "x_pin_wall", "expected_collision": false},
+    {"name": "magnets_vs_all_parts", "mode": "x_magnets", "expected_collision": false},
+    {"name": "positive_control_black_vs_yellow", "mode": "x_control", "expected_collision": true}
+  ],
+  "interpretation": "Modeled solids at the listed parameters only. Wall probes report material missing within the stated wall of each pocket/socket. The 0.14/0.16 pair brackets the 0.15 mm/side keypad gap. Physical fit is from the v3 coupons (observations.md), not from this check."
+}

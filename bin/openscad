@@ -1,0 +1,12 @@
+#!/bin/sh
+# Run the OpenSCAD development snapshot with the fast Manifold geometry engine.
+# Install it with:  brew install --cask openscad@snapshot   (or run bin/setup)
+# Set OPENSCAD_APP to use an OpenSCAD.app somewhere else.
+for app in "${OPENSCAD_APP:-}" /Applications/OpenSCAD.app "$HOME/Applications/OpenSCAD.app"; do
+  if [ -n "$app" ] && [ -x "$app/Contents/MacOS/OpenSCAD" ]; then
+    exec "$app/Contents/MacOS/OpenSCAD" --backend=manifold "$@"
+  fi
+done
+echo "bin/openscad: OpenSCAD.app not found in /Applications or ~/Applications." >&2
+echo "Fix: run bin/setup, or: brew install --cask openscad@snapshot" >&2
+exit 127
